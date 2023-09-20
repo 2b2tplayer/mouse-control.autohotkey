@@ -1,30 +1,32 @@
 #InstallKeybdHook
+#UseHook on
 
 ; vim_mouse_2.ahk
-; vim (and now also WASD!) bindings to control the mouse with the keyboard
+; vim bindings to control the mouse with the keyboard
 ; 
-; Astrid Ivy
+; Astrid Ivy (tokyo's fork)
 ; 2019-04-14
 ;
-; Last updated 2022-02-05
+; Last updated 2023-20-9
 
 global INSERT_MODE := false
 global INSERT_QUICK := false
-global NORMAL_MODE := false
+global NORMAL_MODE := true
 global NORMAL_QUICK := false
-global WASD := true
+global WASD := false
 
 ; Drag takes care of this now
 ;global MAX_VELOCITY := 72
 
 ; mouse speed variables
-global FORCE := 1.8
+; 1.8 before 0.982
+global FORCE := 1.5
 global RESISTANCE := 0.982
 
 global VELOCITY_X := 0
 global VELOCITY_Y := 0
 
-global POP_UP := false
+global POP_UP := true
 
 global DRAGGING := false
 
@@ -56,20 +58,6 @@ MoveCursor() {
   UP := UP - GetKeyState("k", "P")
   RIGHT := RIGHT + GetKeyState("l", "P")
   
-  if (WASD) {
-    UP := UP -  GetKeyState("w", "P")
-    LEFT := LEFT - GetKeyState("a", "P")
-    DOWN := DOWN + GetKeyState("s", "P")
-    RIGHT := RIGHT + GetKeyState("d", "P")
-  }
-  
-  If (NORMAL_QUICK) {
-    caps_down := GetKeyState("Capslock", "P")
-    IF (caps_down == 0) {
-      EnterInsertMode()
-    }
-  }
-  
   If (NORMAL_MODE == false) {
     VELOCITY_X := 0
     VELOCITY_Y := 0
@@ -83,21 +71,14 @@ MoveCursor() {
 
   MouseMove, %VELOCITY_X%, %VELOCITY_Y%, 0, R
 
-  ;(humble beginnings)
-  ;MsgBox, %NORMAL_MODE%
-  ;msg1 := "h " . LEFT . " j  " . DOWN . " k " . UP . " l " . RIGHT
-  ;MsgBox, %msg1%
-  ;msg2 := "Moving " . VELOCITY_X . " " . VELOCITY_Y
-  ;MsgBox, %msg2%
 }
 
 EnterNormalMode(quick:=false) {
-  ;MsgBox, "Welcome to Normal Mode"
   NORMAL_QUICK := quick
 
-  msg := "NORMAL"
+  msg := "keyboard"
   If (WASD == false) {
-    msg := msg . " (VIM)"
+    msg := msg . " (vim)"
   }
   If (quick) {
     msg := msg . " (QUICK)"
@@ -114,26 +95,11 @@ EnterNormalMode(quick:=false) {
   SetTimer, MoveCursor, 16
 }
 
-EnterWASDMode(quick:=false) {
-  msg := "NORMAL"
-  If (quick) {
-    msg := msg . " (QUICK)"
-  }
-  ShowModePopup(msg)
-  WASD := true
-  EnterNormalMode(quick)
-}
-
-ExitWASDMode() {
-  ShowModePopup("NORMAL (VIM)")
-  WASD := false
-}
 
 EnterInsertMode(quick:=false) {
-  ;MsgBox, "Welcome to Insert Mode"
-  msg := "INSERT"
+  msg := "normal"
   If (quick) {
-    msg := msg . " (QUICK)"
+    msg := msg 
   }
   ShowModePopup(msg)
   INSERT_MODE := true
@@ -160,9 +126,9 @@ ShowModePopup(msg) {
   ; clean up any lingering popups
   ClosePopup()
   center := MonitorLeftEdge() + (A_ScreenWidth // 2)
-  popx := center - 150
+  popx := center - 75
   popy := (A_ScreenHeight // 2) - 28
-  Progress, b x%popx% y%popy% zh0 w300 h56 fm24,, %msg%,,SimSun
+  Progress, b x%popx% y%popy% zh0 w150 h56 fm20,, %msg%,,SimSun
   SetTimer, ClosePopup, -1600
   POP_UP := true
 }
@@ -215,7 +181,6 @@ Yank() {
   WinGetPos,wx,wy,width,,A
   center := wx + width - 180
   y := wy + 12
-  ;MsgBox, Hello %width% %center%
   MouseMove, center, y
   Drag()
 }
@@ -235,9 +200,6 @@ MouseMiddle() {
   DRAGGING := false
 }
 
-; TODO: When we have more monitors, set up H and L to use current screen as basis
-; hard to test when I only have the one
-
 JumpMiddle() {
   CoordMode, Mouse, Screen
   MouseMove, (A_ScreenWidth // 2), (A_ScreenHeight // 2)
@@ -246,11 +208,13 @@ JumpMiddle() {
 JumpMiddle2() {
   CoordMode, Mouse, Screen
   MouseMove, (A_ScreenWidth + A_ScreenWidth // 2), (A_ScreenHeight // 2)
+  ;MouseMove, (- A_ScreenWidth // 2), (A_ScreenHeight // 2)
 }
 
 JumpMiddle3() {
   CoordMode, Mouse, Screen
   MouseMove, (A_ScreenWidth * 2 + A_ScreenWidth // 2), (A_ScreenHeight // 2)
+  ;MouseMove, (- A_ScreenWidth - A_ScreenWidth // 2), (A_ScreenHeight // 2)
 }
 
 MonitorLeftEdge() {
@@ -260,36 +224,6 @@ MonitorLeftEdge() {
   monitor := (mx // A_ScreenWidth)
 
   return monitor * A_ScreenWidth
-}
-
-JumpLeftEdge() {
-  x := MonitorLeftEdge() + 2
-  y := 0
-  CoordMode, Mouse, Screen
-  MouseGetPos,,y
-  MouseMove, x,y
-}
-
-JumpBottomEdge() {
-  x := 0
-  CoordMode, Mouse, Screen
-  MouseGetPos, x
-  MouseMove, x,(A_ScreenHeight - 0)
-}
-
-JumpTopEdge() {
-  x := 0
-  CoordMode, Mouse, Screen
-  MouseGetPos, x
-  MouseMove, x,0
-}
-
-JumpRightEdge() {
-  x := MonitorLeftEdge() + A_ScreenWidth - 2
-  y := 0
-  CoordMode, Mouse, Screen
-  MouseGetPos,,y
-  MouseMove, x,y
 }
 
 MouseBack() {
@@ -326,19 +260,25 @@ ScrollDownMore() {
 
 
 ; "FINAL" MODE SWITCH BINDINGS
-Home:: EnterNormalMode()
-Insert:: EnterInsertMode()
-<#<!n:: EnterNormalMode()
-<#<!i:: EnterInsertMode()
+mode := 0
+
+sc029::
+    if (mode == 0) {
+        ; Enter Insert Mode
+        EnterInsertMode()
+        mode := 1
+    } else {
+        ; Enter Normal Mode
+        EnterNormalMode()
+        mode := 0
+    }
+return
+;<#<!n:: EnterNormalMode()
+;<#<!i:: EnterInsertMode()
 
 ; escape hatches
 +Home:: Send, {Home}
 +Insert:: Send, {Insert}
-;FIXME
-; doesn't turn caplsock off.
-^Capslock:: Send, {Capslock}
-; meh. good enough.
-^+Capslock:: SetCapsLockState, Off
 
 
 #If (NORMAL_MODE)
@@ -347,10 +287,11 @@ Insert:: EnterInsertMode()
   ; Many paths to Quick Insert
   `:: ClickInsert(true)
   +S:: DoubleClickInsert()
-  ; passthru for Vimium hotlinks 
-  ~f:: EnterInsertMode(true)
+  
   ; passthru to common "search" hotkey
   ~^f:: EnterInsertMode(true)
+  ; passthru to Windows key
+  ~LWIN:: EnterInsertMode(true)
   ; passthru for new tab
   ~^t:: EnterInsertMode(true)
   ; passthru for quick edits
@@ -362,10 +303,6 @@ Insert:: EnterInsertMode()
   j:: Return
   k:: Return
   l:: Return
-  +H:: JumpLeftEdge()
-  +J:: JumpBottomEdge()
-  +K:: JumpTopEdge()
-  +L:: JumpRightEdge()
   ; commands
   *i:: MouseLeft()
   *o:: MouseRight()
@@ -387,25 +324,16 @@ Insert:: EnterInsertMode()
   b:: MouseBack()
   ; allow for modifier keys (or more importantly a lack of them) by lifting ctrl requirement for these hotkeys
   u:: ScrollUpMore()
-  *0:: ScrollDown()
-  *9:: ScrollUp()
-  ]:: ScrollDown()
-  [:: ScrollUp()
-  +]:: ScrollDownMore()
-  +[:: ScrollUpMore()
   End:: Click, Up
-#If (NORMAL_MODE && NORMAL_QUICK == false)
-  Capslock:: EnterInsertMode(true)
-  +Capslock:: EnterInsertMode()
+  
 ; Addl Vim hotkeys that conflict with WASD mode
 #If (NORMAL_MODE && WASD == false)
-  <#<!r:: EnterWASDMode()
   e:: ScrollDown()
   y:: ScrollUp()
   d:: ScrollDownMore()
 ; No shift requirements in normal quick mode
 #If (NORMAL_MODE && NORMAL_QUICK)
-  Capslock:: Return
+  
   m:: JumpMiddle()
   ,:: JumpMiddle2()
   .:: JumpMiddle3()
@@ -418,34 +346,13 @@ Insert:: EnterInsertMode()
   ^l:: Send {Right}
 #If (INSERT_MODE)
   ; Normal (Quick) Mode
-#If (INSERT_MODE && INSERT_QUICK == false)
-  Capslock:: EnterNormalMode(true)
-  +Capslock:: EnterNormalMode()
+
 #If (INSERT_MODE && INSERT_QUICK)
   ~Enter:: EnterNormalMode()
   ; Copy and return to Normal Mode
   ~^c:: EnterNormalMode()
   Escape:: EnterNormalMode()
-  Capslock:: EnterNormalMode()
-  +Capslock:: EnterNormalMode()
-#If (NORMAL_MODE && WASD)
-  <#<!r:: ExitWASDMode()
-  ; Intercept movement keys
-  w:: Return
-  a:: Return
-  s:: Return
-  d:: Return
-  +C:: JumpMiddle()
-  +W:: JumpTopEdge()
-  +A:: JumpLeftEdge()
-  +S:: JumpBottomEdge()
-  +D:: JumpRightEdge()
-  *e:: ScrollDown()
-  *q:: ScrollUp()
-  *r:: MouseLeft()
-  t:: MouseRight()
-  +T:: MouseRight()
-  *y:: MouseMiddle()
+
 #IF (DRAGGING)
   LButton:: ReleaseDrag(1)
   MButton:: ReleaseDrag(2)

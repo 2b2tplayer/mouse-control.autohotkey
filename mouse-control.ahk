@@ -15,12 +15,9 @@ global NORMAL_MODE := true
 global NORMAL_QUICK := false
 global WASD := false
 
-; Drag takes care of this now
-;global MAX_VELOCITY := 72
-
 ; mouse speed variables
-; 1.8 before 0.982
-global FORCE := 1.5
+; 1.8 before 0.982 1.5
+global FORCE := 3
 global RESISTANCE := 0.982
 
 global VELOCITY_X := 0
@@ -37,9 +34,9 @@ Accelerate(velocity, pos, neg) {
   If (pos == 0 && neg == 0) {
     Return 0
   }
-  ; smooth deceleration :)
+  ; smooth deceleration 0.666 before:)
   Else If (pos + neg == 0) {
-    Return velocity * 0.666
+    Return velocity * 1
   }
   ; physicszzzzz
   Else {
@@ -78,7 +75,7 @@ EnterNormalMode(quick:=false) {
 
   msg := "keyboard"
   If (WASD == false) {
-    msg := msg . " (vim)"
+    msg := msg
   }
   If (quick) {
     msg := msg . " (QUICK)"
@@ -127,8 +124,8 @@ ShowModePopup(msg) {
   ClosePopup()
   center := MonitorLeftEdge() + (A_ScreenWidth // 2)
   popx := center - 75
-  popy := (A_ScreenHeight // 2) - 28
-  Progress, b x%popx% y%popy% zh0 w150 h56 fm20,, %msg%,,SimSun
+  popy := (A_ScreenHeight // 2) - 15
+  Progress, b x%popx% y%popy% zh0 w180 h50 fm20,, %msg%,,Colus
   SetTimer, ClosePopup, -1600
   POP_UP := true
 }

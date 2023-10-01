@@ -13,7 +13,6 @@ global INSERT_MODE := false
 global INSERT_QUICK := false
 global NORMAL_MODE := true
 global NORMAL_QUICK := false
-global WASD := false
 
 ; mouse speed variables
 ; 1.8 before 0.982 1.5
@@ -260,14 +259,12 @@ ScrollDownMore() {
 mode := 0
 
 sc029::
-    if (mode == 0) {
+    if (NORMAL_MODE) {
         ; Enter Insert Mode
         EnterInsertMode()
-        mode := 1
     } else {
         ; Enter Normal Mode
         EnterNormalMode()
-        mode := 0
     }
 return
 ;<#<!n:: EnterNormalMode()
